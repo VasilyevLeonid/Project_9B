@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QPushButton, QWidget, QMessageBox, QVBoxLayout, QTextEdit
+from PyQt5.QtWidgets import QLineEdit, QLabel, QWidget, QMessageBox, QVBoxLayout, QTextEdit, QPushButton
 import cmath as cmt
 import math
 import matplotlib.pyplot as plt
@@ -237,6 +237,17 @@ class Ui_MainWindow(object):
         self.instruction.setFont(font)
         self.instruction.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
         self.instruction.setObjectName("инструкция")
+
+        self.graph = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.graph.setGeometry(QtCore.QRect(20, 500, 300, 30))
+        font = QtGui.QFont()
+        font.setFamily("Liberation Serif")
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.graph.setFont(font)
+        self.graph.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
+        self.graph.setObjectName("построение чисел на плоскости")
 
         self.conjugate = QtWidgets.QPushButton(parent=self.centralwidget)
         self.conjugate.setGeometry(QtCore.QRect(660, 600, 91, 91))
@@ -610,6 +621,7 @@ class Ui_MainWindow(object):
         self.equals.setText(_translate("MainWindow", "="))
         self.num0.setText(_translate("MainWindow", "0"))
         self.instruction.setText(_translate("MainWindow", "Инструкция"))
+        self.graph.setText(_translate("MainWindow", "Построение чисел на плоскости"))
         self.conjugate.setText(_translate("MainWindow", " z ¯"))
         self.log.setText(_translate("MainWindow", "log"))
         self.Clear1elem.setText(_translate("MainWindow", "<="))
@@ -686,6 +698,7 @@ class Window(QtWidgets.QMainWindow):
         self.ui.del_all.clicked.connect(self.Delall)
         self.ui.degree1.clicked.connect(self.Degree1)
         self.ui.instruction.clicked.connect(self.Rules)
+        self.ui.graph.clicked.connect(self.Graphik)
 
         # Выводим картинку
         self.image = "complex2.png"
@@ -870,8 +883,8 @@ class Window(QtWidgets.QMainWindow):
 
     def Mul(self):
         try:
-            value1 = float(self.ui.im_1.text())  # Преобразуем в число с плавающей точкой
-            value2 = float(self.ui.im_2.text())  # Аналогично для второго поля ввода
+            value1 = float(self.ui.im_1.text())
+            value2 = float(self.ui.im_2.text())
             value3 = float(self.ui.re_1.text())
             value4 = float(self.ui.re_2.text())
             result1 = value3 * value4 - value1 * value2
@@ -1021,6 +1034,10 @@ class Window(QtWidgets.QMainWindow):
         self.rule = Instruction()
         self.rule.show()
 
+    def Graphik(self):
+        self.plane = Complex_plane()
+        self.plane.show()
+
 
     def _parse_complex(self, text):
         # Парсит строку, пытаясь преобразовать её в вещественное или комплексное число
@@ -1037,45 +1054,6 @@ class Window(QtWidgets.QMainWindow):
                 raise ValueError(
                     "Неверный формат числа.  Ожидается вещественное или комплексное число (например, '3+2j')")
 
-    def plot_complex_numbers(complex_numbers):
-        # Строит график комплексных чисел на комплексной плоскости
-        plt.figure(figsize=(8, 8))
-        for z in complex_numbers:
-            plt.plot([0, z.real], [0, z.imag], marker='o', linestyle='-')
-            plt.text(z.real, z.imag, f'{z}', fontsize=12, ha='right')
-        plt.axhline(0, color='black', linewidth=0.5, ls='--')
-        plt.axvline(0, color='black', linewidth=0.5, ls='--')
-        plt.xlim(-10, 10)
-        plt.ylim(-10, 10)
-        plt.xlabel('Действительная часть')
-        plt.ylabel('Мнимая часть')
-        plt.title('Комплексные числа на плоскости')
-        plt.grid(True)
-        plt.show()
-
-    def get_complex_numbers(num_numbers):
-        # Запрашивает у пользователя указанное количество комплексных чисел
-        complex_nums = []
-        for i in range(num_numbers):
-            while True:
-                try:
-                    z = complex(input(f"Введите комплексное число {i + 1} (например, 3+4j): "))
-                    complex_nums.append(z)
-                    break  # Выходим из внутреннего цикла, если ввод корректен
-                except ValueError:
-                    print("Неверный формат. Попробуйте ещё раз.")
-        return complex_nums
-
-    try:
-        num_complex = int(input("Сколько комплексных чисел вы хотите ввести? "))
-        if num_complex <= 0:
-            raise ValueError("Количество чисел должно быть больше нуля")
-        complex_numbers = get_complex_numbers(num_complex)
-        plot_complex_numbers(complex_numbers)
-    except ValueError as e:
-        print(f"Ошибка: {e}")
-    except Exception as e:
-        print(f"Произошла непредвиденная ошибка: {e}")
 
 class Instruction(QWidget):
     def __init__(self):
@@ -1096,6 +1074,12 @@ class Instruction(QWidget):
             with open('Инструкция.txt', 'r', encoding='utf-8') as file:
                 content = file.read()
                 self.rule_text.setPlainText(content)  # Устанавливаем текст в QTextEdit
+
+                # Увеличиваем размер шрифта в два раза
+                font = self.rule_text.font()  # Получаем текущий шрифт
+                font.setPointSize(font.pointSize() * 2)  # Увеличиваем размер шрифта в два раза
+                self.rule_text.setFont(font)  # Устанавливаем измененный шрифт
+
         except FileNotFoundError:
             self.rule_text.setPlainText("Файл с инструкциями не найден.")
         except Exception as e:
@@ -1108,8 +1092,85 @@ class Instruction(QWidget):
         self.setLayout(layout)
 
 
-app = QtWidgets.QApplication([])
-application = Window()
-application.show()
-sys.exit(app.exec())
+class Complex_plane(QWidget):
+    def __init__(self):
+        super().__init__()
 
+        layout = QVBoxLayout()
+
+        self.setWindowTitle("Построение чисел на плоскости")
+        self.setGeometry(600, 100, 800, 800)
+
+        # Поле для ввода комплексных чисел
+        self.complex1 = QLabel(self)
+        self.complex1.setText("Введите комплексное число (например, 3+4j):")
+        self.complex1.resize(350, 20)
+        self.complex1.move(300, 250)
+
+        self.complex4 = QLineEdit(self)
+        self.complex4.resize(250, 30)
+        self.complex4.move(300, 330)
+
+        # Кнопка для построения графика
+        self.complex5 = QPushButton('Построить', self)
+        self.complex5.resize(100, 50)
+        self.complex5.move(360, 400)
+        self.complex5.clicked.connect(self.on_plot_button_clicked)
+
+        # Устанавливаем layout в виджет
+        self.setLayout(layout)
+
+
+    def on_plot_button_clicked(self):
+        # Получаем введенные данные и строим график
+        input_text = self.complex4.text()
+
+        try:
+            complex_numbers = self.get_complex_numbers(input_text)
+            self.plot_complex_numbers(complex_numbers)
+        except ValueError:
+            QMessageBox.warning(self, "Ошибка", "Пожалуйста, введите корректные числа.")
+        except Exception as e:
+            QMessageBox.warning(self, "Ошибка", f"Произошла ошибка: {e}")
+
+
+    def plot_complex_numbers(self, complex_numbers):
+        # Строит график комплексных чисел на комплексной плоскости
+        plt.figure(figsize=(8, 8))
+
+        for z in complex_numbers:
+            plt.plot([0, z.real], [0, z.imag], marker='o', linestyle='-')
+            plt.text(z.real, z.imag, f'{z}', fontsize=12, ha='right')
+
+        plt.axhline(0, color='black', linewidth=0.5, ls='--')
+        plt.axvline(0, color='black', linewidth=0.5, ls='--')
+
+        plt.xlim(-20, 20)
+        plt.ylim(-20, 20)
+
+        plt.xlabel('Действительная часть')
+        plt.ylabel('Мнимая часть')
+        plt.title('Комплексные числа на плоскости')
+
+        plt.grid(True)
+        plt.show()
+
+
+    def get_complex_numbers(self, input_text):
+        # Запрашивает у пользователя указанные комплексные числа
+        complex_nums = []
+
+        # Разделяем введенные значения по запятой и преобразуем в комплексные числа
+        for item in input_text.split(','):
+            item = item.strip()  # Убираем лишние пробелы
+            if item:  # Проверяем не пустая ли строка
+                complex_nums.append(complex(item))  # Преобразуем строку в комплексное число
+
+        return complex_nums
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication([])
+    application = Window()
+    application.show()
+    sys.exit(app.exec())
